@@ -2,6 +2,8 @@
 Write-Host -Object "Running $PSCommandPath" -ForegroundColor Cyan
 . "$PSScriptRoot\constants.ps1"
 
+$instance2 = '.'
+
 Describe "$CommandName Unit Tests" -Tag 'UnitTests' {
     Context "Validate parameters" {
         <#
@@ -21,24 +23,40 @@ Describe "$CommandName Unit Tests" -Tag 'UnitTests' {
             $params.Count - $defaultParamCount | Should Be $paramCount
         }
     }
-    Describe "Get-DbaDbRole Integration Tests" -Tag "IntegrationTests" {
-        Context "parameters work" {
-            It "returns no roles from excluded DB with -ExcludeDatabase" {
-                $results = Get-DbaDbRole -SqlInstance $script:instance2 -ExcludeDatabase master
-                $results.where( {$_.Database -eq 'master'}).count | Should Be 0
-            }
-            It "returns only roles from selected DB with -Database" {
-                $results = Get-DbaDbRole -SqlInstance $script:instance2 -Database master
-                $results.where( {$_.Database -ne 'master'}).count | Should Be 0
-            }
-            It "returns no fixed roles with -ExcludeFixedRole" {
-                $results = Get-DbaDbRole -SqlInstance $script:instance2 -ExcludeFixedRole
-                $results.where( {$_.name -match 'db_datareader|db_datawriter|db_ddladmin'}).count | Should Be 0
-            }
-            It "returns fixed roles without -ExcludeFixedRole" {
-                $results = Get-DbaDbRole -SqlInstance $script:instance2
-                $results.where( {$_.name -match 'db_datareader|db_datawriter|db_ddladmin'}).count | Should BeGreaterThan 0
-            }
+}
+
+Describe "Get-DbaDbRole Integration Tests" -Tag "IntegrationTests" {
+    Context "parameters work" {
+        It "returns no roles from excluded DB with -ExcludeDatabase" {
+            $results = Get-DbaDbRole -SqlInstance $script:instance2 -ExcludeDatabase master
+            $results.where( {$_.Database -eq 'master'}).count | Should Be 0
+        }
+        It "returns only roles from selected DB with -Database" {
+            $results = Get-DbaDbRole -SqlInstance $script:instance2 -Database master
+            $results.where( {$_.Database -ne 'master'}).count | Should Be 0
+        }
+        It "returns no fixed roles with -ExcludeFixedRole" {
+            $results = Get-DbaDbRole -SqlInstance $script:instance2 -ExcludeFixedRole
+            $results.where( {$_.name -match 'db_datareader|db_datawriter|db_ddladmin'}).count | Should Be 0
+        }
+        It "returns fixed roles without -ExcludeFixedRole" {
+            $results = Get-DbaDbRole -SqlInstance $script:instance2
+            $results.where( {$_.name -match 'db_datareader|db_datawriter|db_ddladmin'}).count | Should BeGreaterThan 0
+        }
+    }
+
+    Context "Error handling" {
+        It "errors when a database is inaccessible" {
+            $server = Connect-DbaInstance -SqlInstance $script:instance2
+            $random = Get-Random
+            $db = "dbatoolsci_dbadbrole$random"
+            $server.Query("CREATE DATABASE $db")
+    
+            $null = Set-DbaDatabaseState -SqlInstance $script:instance2 -Database $db -Offline -EnableException
+
+            { Get-DbaDbRole -SqlInstance $script:instance2 -Database $db -EnableException } | Should Throw "Database $db on $script:instance2 is not accessible"
+            
+            $null = Get-DbaDatabase -SqlInstance $server -Database $db | Remove-DbaDatabase -Confirm:$false                
         }
     }
 }
