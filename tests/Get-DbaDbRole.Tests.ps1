@@ -2,8 +2,6 @@
 Write-Host -Object "Running $PSCommandPath" -ForegroundColor Cyan
 . "$PSScriptRoot\constants.ps1"
 
-$instance2 = '.'
-
 Describe "$CommandName Unit Tests" -Tag 'UnitTests' {
     Context "Validate parameters" {
         <#
@@ -54,7 +52,7 @@ Describe "Get-DbaDbRole Integration Tests" -Tag "IntegrationTests" {
     
             $null = Set-DbaDatabaseState -SqlInstance $script:instance2 -Database $db -Offline -EnableException
 
-            { Get-DbaDbRole -SqlInstance $script:instance2 -Database $db -EnableException } | Should Throw "Database $db on $script:instance2 is not accessible"
+            { Get-DbaDbRole -SqlInstance $script:instance2 -Database $db -EnableException } | Should Throw "Database [$db] on $script:instance2 is not accessible"
             
             $null = Get-DbaDatabase -SqlInstance $server -Database $db | Remove-DbaDatabase -Confirm:$false                
         }
