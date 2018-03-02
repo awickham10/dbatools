@@ -168,8 +168,8 @@ function New-DbaDbUser {
             foreach ($db in $databases) {
                 Write-Message -Level Verbose -Message "Add users to Database $db on target $server"
 
-                switch -Wildcard ($PSCmdlet.ParameterSetName) {
-                    "Login*" {
+                switch ($PSCmdlet.ParameterSetName) {
+                    "Login" {
                         # Creates a user with Login
                         Write-Message -Level VeryVerbose -Message "Using UserType: SqlLogin"
 
