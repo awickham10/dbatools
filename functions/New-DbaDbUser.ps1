@@ -157,17 +157,13 @@ function New-DbaDbUser {
                 Stop-Function -Message "Failure" -Category ConnectionError -ErrorRecord $_ -Target $instance -Continue
             }
 
-            $databases = $server.Databases | Where-Object IsAccessible -eq $true
-
-            if ($Database) {
-                $databases = $databases | Where-Object Name -In $Database
+            $databaseParams = @{
+                SqlInstance = $server
+                Database = $Database
+                ExcludeDatabase = $ExcludeDatabase
+                ExcludeAllSystemDb = Test-Bound IncludeSystem -Not
             }
-            if ($ExcludeDatabase) {
-                $databases = $databases | Where-Object Name -NotIn $ExcludeDatabase
-            }
-            if (Test-Bound 'IncludeSystem' -Not) {
-                $databases = $databases | Where-Object IsSystemObject -NE $true
-            }
+            $databases = Get-DbaDatabase @databaseParams
 
             foreach ($db in $databases) {
                 Write-Message -Level Verbose -Message "Add users to Database $db on target $server"
