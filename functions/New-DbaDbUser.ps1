@@ -128,7 +128,7 @@ function New-DbaDbUser {
                 [Microsoft.SqlServer.Management.Smo.Database]$Database
             )
 
-            # Does user exist with same login?
+            # Does user exist?
             if ( $existingUser = ( $Database.Users | Where-Object Name -eq $Username ) ) {
                 if (Test-Bound 'Force') {
                     if ($Pscmdlet.ShouldProcess($existingUser, "Dropping existing user $($existingUser.Name) because -Force was used")) {
@@ -163,7 +163,7 @@ function New-DbaDbUser {
                 ExcludeDatabase = $ExcludeDatabase
                 ExcludeAllSystemDb = Test-Bound IncludeSystem -Not
             }
-            $databases = Get-DbaDatabase @databaseParams
+            $databases = Get-DbaDatabase -@databaseParams
 
             foreach ($db in $databases) {
                 Write-Message -Level Verbose -Message "Add users to Database $db on target $server"
